@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func readCsvFile(filePath string) [][]string {
@@ -49,10 +50,31 @@ func stoi32(element string) (int32, error) {
 	return int32(result), nil
 }
 
-func getKey(playerId, Season int) string {
+func getKey(playerId, Season, clubID int) string {
 	key := strconv.Itoa(int(playerId))
 	key += "#"
 	key += strconv.Itoa(int(Season))
+	key += "#"
+	key += strconv.Itoa(int(clubID))
 
 	return key
+}
+
+func separateKey(key string) (int64, int32, int64, error) {
+	result := strings.Split(key, "#")
+	playerId, err := stoi64(result[0])
+	if err != nil {
+		return -1, -1, -1, err
+	}
+
+	season, err := stoi32(result[1])
+	if err != nil {
+		return -1, -1, -1, err
+	}
+
+	clubId, err := stoi64(result[2])
+	if err != nil {
+		return -1, -1, -1, err
+	}
+	return playerId, season, clubId, nil
 }

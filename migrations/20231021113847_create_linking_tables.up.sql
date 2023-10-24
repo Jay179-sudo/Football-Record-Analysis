@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS Player_Stats(
 	Red_Cards integer,
 	Goals integer,
 	Assists integer,
-	Minutes_Played integer
+	Minutes_Played integer,
+	Player_Valuations integer
 
 );

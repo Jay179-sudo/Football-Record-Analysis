@@ -40,11 +40,11 @@ func main() {
 		models: data.NewModels(db),
 	}
 
-	app.printState(logger)
 	logger.Printf("Database Connection Pool Established")
 	// First, call the excel handler to convert excel data into sql data.
 	app.GetClubData()
 	app.GetPlayerData()
+	app.GetPlayerStatsData()
 	// Second, perform proprocessing on the data stored in the database
 
 }
@@ -62,8 +62,4 @@ func openDB(cfg config) (*sql.DB, error) {
 		return nil, err
 	}
 	return db, nil
-}
-
-func (a *application) printState(logger *log.Logger) {
-	logger.Printf("Hi!")
 }
