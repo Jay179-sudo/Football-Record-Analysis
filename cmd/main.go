@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -45,7 +46,23 @@ func main() {
 	app.GetClubData()
 	app.GetPlayerData()
 	app.GetPlayerStatsData()
+
 	// Second, perform proprocessing on the data stored in the database
+	// 5 number summary for: minutes_played
+	// Precomputations
+
+	result, err := app.models.Player_Stats.GetMinutes()
+	if err != nil {
+		log.Fatal("Error db query")
+	}
+	_, q1, _, q3, _, err := app.getFiveNumberSummary(result)
+	if err != nil {
+		log.Fatal("Eror db query")
+	}
+	precomp := &Precomputations{
+		MinutesLower: q1 - 3*(q3-q1)/2,
+	}
+	fmt.Printf("%d", precomp.MinutesLower)
 
 }
 

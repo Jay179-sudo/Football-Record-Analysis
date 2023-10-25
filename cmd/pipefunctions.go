@@ -1,16 +1,12 @@
 package main
 
 import (
-	"time"
-
 	"github.com/Jay179-sudo/FootballRecordAnalysis/internal/data"
 )
 
-// For the Player Model
-
 // input a list of players, the generator will generate a player one by one in the channel
-func (app *application) generator(done <-chan interface{}, players ...*data.Player) <-chan *data.Player {
-	dataStream := make(chan *data.Player)
+func (app *application) generator(done <-chan interface{}, players ...*data.Player_Stats) <-chan *data.Player_Stats {
+	dataStream := make(chan *data.Player_Stats)
 	go func() {
 		defer close(dataStream)
 		for _, i := range players {
@@ -24,50 +20,71 @@ func (app *application) generator(done <-chan interface{}, players ...*data.Play
 	return dataStream
 }
 
-func cleaned(player data.Player) data.Player {
-	cleanedPlayer := data.Player{
-		Player_ID:   1,
-		Player_Name: "Jay",
-		Position:    "Midfield",
-		DOB:         time.Now(),
-	}
+// Final function that updates the SQL database
 
+func (app *application) cleaning(done <-chan interface{}, upStream <-chan data.Player_Stats, precomp Precomputations) <-chan data.Player_Stats {
+	dataStream := make(chan data.Player_Stats)
+	go func() {
+		defer close(dataStream)
+		select {
+		case <-done:
+			return
+		case dataStream <- cleaned(precomp, <-upStream):
+		}
+	}()
+
+	return dataStream
+}
+
+func (app *application) transformed(done <-chan interface{}, upStream <-chan data.Player_Stats, precomp Precomputations) <-chan data.Player_Stats {
+	dataStream := make(chan data.Player_Stats)
+	go func() {
+		defer close(dataStream)
+		select {
+		case <-done:
+			return
+		case dataStream <- transformed(precomp, <-upStream):
+		}
+	}()
+	return dataStream
+}
+
+func cleaned(precomp Precomputations, player data.Player_Stats) data.Player_Stats {
+	if player.Minutes_Played == -1 {
+		return player
+	}
+	cleanedPlayer := data.Player_Stats{
+		Player_ID:         player.Player_ID,
+		Current_Club_ID:   player.Current_Club_ID,
+		Season:            player.Season,
+		Yellow_Cards:      player.Yellow_Cards,
+		Red_Cards:         player.Red_Cards,
+		Goals:             player.Goals,
+		Assists:           player.Assists,
+		Minutes_Played:    player.Minutes_Played,
+		Player_Valuations: player.Player_Valuations,
+	}
+	if cleanedPlayer.Minutes_Played <= int32(precomp.MinutesLower) {
+		cleanedPlayer.Minutes_Played = -1
+	}
 	return cleanedPlayer
 }
 
-func transformed(player data.Player) data.Player {
-	transformedPlayer := data.Player{
-		Player_ID:   1,
-		Player_Name: "Jay",
-		Position:    "Midfield",
-		DOB:         time.Now(),
+func transformed(precomp Precomputations, player data.Player_Stats) data.Player_Stats {
+	if player.Minutes_Played == -1 {
+		return player
+	}
+	transformedPlayer := data.Player_Stats{
+		Player_ID:         player.Player_ID,
+		Current_Club_ID:   player.Current_Club_ID,
+		Season:            player.Season,
+		Yellow_Cards:      player.Yellow_Cards,
+		Red_Cards:         player.Red_Cards,
+		Goals:             player.Goals,
+		Assists:           player.Assists,
+		Minutes_Played:    player.Minutes_Played,
+		Player_Valuations: player.Player_Valuations,
 	}
 
 	return transformedPlayer
-}
-func (app *application) cleaning(done <-chan interface{}, player data.Player) <-chan data.Player {
-	dataStream := make(chan data.Player)
-	go func() {
-		defer close(dataStream)
-		select {
-		case <-done:
-			return
-		case dataStream <- cleaned(player):
-		}
-	}()
-
-	return dataStream
-}
-
-func (app *application) transformed(done <-chan interface{}, player data.Player) <-chan data.Player {
-	dataStream := make(chan data.Player)
-	go func() {
-		defer close(dataStream)
-		select {
-		case <-done:
-			return
-		case dataStream <- transformed(player):
-		}
-	}()
-	return dataStream
 }
