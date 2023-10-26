@@ -1,12 +1,14 @@
 package main
 
 import (
+	"log"
+
 	"github.com/Jay179-sudo/FootballRecordAnalysis/internal/data"
 )
 
 // input a list of players, the generator will generate a player one by one in the channel
-func (app *application) generator(done <-chan interface{}, players ...*data.Player_Stats) <-chan *data.Player_Stats {
-	dataStream := make(chan *data.Player_Stats)
+func (app *application) generator(done <-chan interface{}, players ...data.Player_Stats) <-chan data.Player_Stats {
+	dataStream := make(chan data.Player_Stats)
 	go func() {
 		defer close(dataStream)
 		for _, i := range players {
@@ -21,18 +23,19 @@ func (app *application) generator(done <-chan interface{}, players ...*data.Play
 }
 
 // Final function that updates the SQL database
-
 func (app *application) cleaning(done <-chan interface{}, upStream <-chan data.Player_Stats, precomp Precomputations) <-chan data.Player_Stats {
 	dataStream := make(chan data.Player_Stats)
 	go func() {
 		defer close(dataStream)
-		select {
-		case <-done:
-			return
-		case dataStream <- cleaned(precomp, <-upStream):
+		for i := range upStream {
+			select {
+			case <-done:
+				return
+			case dataStream <- cleaned(precomp, i):
+			}
 		}
-	}()
 
+	}()
 	return dataStream
 }
 
@@ -40,13 +43,42 @@ func (app *application) transformed(done <-chan interface{}, upStream <-chan dat
 	dataStream := make(chan data.Player_Stats)
 	go func() {
 		defer close(dataStream)
-		select {
-		case <-done:
-			return
-		case dataStream <- transformed(precomp, <-upStream):
+		for i := range upStream {
+			select {
+			case <-done:
+				return
+			case dataStream <- transformed(precomp, i):
+			}
+
 		}
 	}()
 	return dataStream
+}
+
+func (app *application) pipelineEnd(done <-chan interface{}, upStream <-chan data.Player_Stats) {
+	dataStream := make(chan data.Player_Stats)
+	go func() {
+		defer close(dataStream)
+		for dataVal := range upStream {
+			select {
+			case <-done:
+				return
+			default:
+				// Store to database. Update or delete
+				var err error
+				if dataVal.Minutes_Played == -1 {
+					err = app.models.Player_Stats.Delete(dataVal.Player_ID, dataVal.Current_Club_ID, dataVal.Season)
+				} else {
+					err = app.models.Player_Stats.Update(dataVal)
+				}
+				if err != nil {
+					log.Fatal("Pipeline crashed.", err)
+				}
+
+			}
+		}
+
+	}()
 }
 
 func cleaned(precomp Precomputations, player data.Player_Stats) data.Player_Stats {
@@ -85,6 +117,5 @@ func transformed(precomp Precomputations, player data.Player_Stats) data.Player_
 		Minutes_Played:    player.Minutes_Played,
 		Player_Valuations: player.Player_Valuations,
 	}
-
 	return transformedPlayer
 }

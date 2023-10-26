@@ -30,7 +30,6 @@ func (app *application) GetPlayerData() error {
 			if i == 0 {
 				if search(title_rows, element) {
 					title_index = append(title_index, j)
-					log.Print(element, j)
 				}
 			} else {
 				if j == title_index[0] {

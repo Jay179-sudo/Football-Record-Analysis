@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"time"
@@ -28,7 +27,7 @@ type application struct {
 
 func main() {
 	var cfg config
-	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://admin:password@localhost:5433/football?sslmode=disable", "PostgreSQL DSN")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://football:password@localhost:5433/football?sslmode=disable", "PostgreSQL DSN")
 	flag.Parse()
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 	db, err := openDB(cfg)
@@ -60,9 +59,27 @@ func main() {
 		log.Fatal("Eror db query")
 	}
 	precomp := &Precomputations{
-		MinutesLower: q1 - 3*(q3-q1)/2,
+		MinutesLower: q1 + 0*q3,
 	}
-	fmt.Printf("%d", precomp.MinutesLower)
+
+	done := make(chan interface{})
+	defer close(done)
+
+	stats, err := app.models.Player_Stats.GetAllStats()
+	if err != nil {
+		log.Fatal("Pipeline failed")
+	}
+
+	pipeline := app.transformed(done, app.cleaning(done, app.generator(done, stats...), *precomp), *precomp)
+	for v := range pipeline {
+		if v.Minutes_Played != -1 {
+			app.models.Player_Stats.Update(v)
+		} else {
+			app.models.Player_Stats.Delete(v.Player_ID, v.Current_Club_ID, v.Season)
+		}
+	}
+
+	log.Printf("Data Cleaned...")
 
 }
 
