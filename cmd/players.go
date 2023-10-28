@@ -19,7 +19,7 @@ func getPlayerValuationTitles() []string {
 
 // ________________________STORES Player DATA INTO THE Player Table________________________
 func (app *application) GetPlayerData() error {
-	records := readCsvFile("./data/players.csv")
+	records := readCsvFile("./datasource/players.csv")
 
 	title_rows := getPlayerRecordTitles()
 	title_index := []int{}
@@ -82,7 +82,7 @@ func (app *application) GetPlayerData() error {
 }
 
 func getPlayerValuationRecords() (map[string]int64, error) {
-	records := readCsvFile("./data/player_valuations.csv")
+	records := readCsvFile("./datasource/player_valuations.csv")
 	mp1 := make(map[string]int64)
 	title_index := []int{}
 	title_rows := getPlayerValuationTitles()
