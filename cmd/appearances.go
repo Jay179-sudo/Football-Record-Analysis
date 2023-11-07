@@ -13,10 +13,10 @@ func getAppRecordTitles() []string {
 
 // data from 2017 to 2019
 type aggregation struct {
-	yellow_cards     int32
-	red_cards        int32
-	goals            int32
-	assists          int32
+	yellow_cards     float32
+	red_cards        float32
+	goals            float32
+	assists          float32
 	minutes_played   int32
 	player_valuation int64
 }
@@ -28,7 +28,7 @@ func (app *application) GetPlayerStatsData() error {
 	if err != nil {
 		return err
 	}
-	records := readCsvFile("./data/appearances.csv")
+	records := readCsvFile("./datasource/appearances.csv")
 	// map[string][{yellow_cards, red_cards, goals, assists}].
 	// string = player_id + "#" + year(date) + "#" + current_club_id
 	mp1 := make(map[string]*aggregation)
@@ -65,7 +65,7 @@ func (app *application) GetPlayerStatsData() error {
 					if err != nil {
 						return err
 					}
-					if result < 2017 || result >= 2020 {
+					if result < 2017 || result >= 2023 {
 						break
 					}
 					club_record.Season = result
@@ -95,7 +95,7 @@ func (app *application) GetPlayerStatsData() error {
 				} else if j == title_index[3] {
 					// aggregate yellow cards
 					key := getKey(int(club_record.Player_ID), int(club_record.Season), int(club_record.Current_Club_ID))
-					result, err := stoi32(element)
+					result, err := stof32(element)
 					if err != nil {
 						return err
 					}
@@ -103,7 +103,7 @@ func (app *application) GetPlayerStatsData() error {
 				} else if j == title_index[4] {
 					// aggregate red cards
 					key := getKey(int(club_record.Player_ID), int(club_record.Season), int(club_record.Current_Club_ID))
-					result, err := stoi32(element)
+					result, err := stof32(element)
 					if err != nil {
 						return err
 					}
@@ -111,7 +111,7 @@ func (app *application) GetPlayerStatsData() error {
 				} else if j == title_index[5] {
 					// aggregate goals
 					key := getKey(int(club_record.Player_ID), int(club_record.Season), int(club_record.Current_Club_ID))
-					result, err := stoi32(element)
+					result, err := stof32(element)
 					if err != nil {
 						return err
 					}
@@ -119,7 +119,7 @@ func (app *application) GetPlayerStatsData() error {
 				} else if j == title_index[6] {
 					// aggregate assists
 					key := getKey(int(club_record.Player_ID), int(club_record.Season), int(club_record.Current_Club_ID))
-					result, err := stoi32(element)
+					result, err := stof32(element)
 					if err != nil {
 						return err
 					}

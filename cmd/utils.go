@@ -1,6 +1,9 @@
 package main
 
 import (
+	"encoding/csv"
+	"log"
+	"os"
 	"strconv"
 	"strings"
 
@@ -15,6 +18,23 @@ func search[T comparable](list []T, searchVal T) bool {
 		}
 	}
 	return false
+}
+
+// ___________________ CSV READER ________________________
+func readCsvFile(filePath string) [][]string {
+	f, err := os.Open(filePath)
+	if err != nil {
+		log.Fatal("Unable to read input file "+filePath, err)
+	}
+	defer f.Close()
+
+	csvReader := csv.NewReader(f)
+	records, err := csvReader.ReadAll()
+	if err != nil {
+		log.Fatal("Unable to parse file as CSV for "+filePath, err)
+	}
+
+	return records
 }
 
 // ______________________ CONVERT STRING TO A int64 ________________
@@ -33,6 +53,14 @@ func stoi32(element string) (int32, error) {
 		return -1, err
 	}
 	return int32(result), nil
+}
+
+func stof32(element string) (float32, error) {
+	result, err := strconv.ParseFloat(element, 10)
+	if err != nil {
+		return -1, err
+	}
+	return float32(result), nil
 }
 
 // ______________________ CONVERT INPUT STRINGS TO A # SEPARATED KEY ________________

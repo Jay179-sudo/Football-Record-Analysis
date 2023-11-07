@@ -14,10 +14,10 @@ type Player_Stats struct {
 	Player_ID         int64
 	Current_Club_ID   int64
 	Season            int32
-	Yellow_Cards      int32
-	Red_Cards         int32
-	Goals             int32
-	Assists           int32
+	Yellow_Cards      float32
+	Red_Cards         float32
+	Goals             float32
+	Assists           float32
 	Minutes_Played    int32
 	Player_Valuations int64
 }

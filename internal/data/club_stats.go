@@ -11,24 +11,25 @@ type ClubStatsModel struct {
 }
 
 type Club_Stats struct {
-	Club_ID     int64
-	Season      int64
-	Average_Age float64
-	Squad_Size  int64
+	Club_ID int64
+	Season  int64
+	Wins    int32
+	Losses  int32
+	Draws   int32
 }
 
-func (c ClubStatsModel) Insert(Club_Stats *Club_Stats) error {
+func (c ClubStatsModel) Insert(Club_Stats Club_Stats) error {
 	query :=
 		`
 		INSERT INTO Club_Stats
-		VALUES ($1, $2, $3, $4)
-		RETURNING Club_ID, Season, Average_Age, Squad_Size
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING Club_ID, Season, Wins, Losses, Draws
 	`
 
-	args := []interface{}{Club_Stats.Club_ID, Club_Stats.Season, Club_Stats.Average_Age, Club_Stats.Squad_Size}
+	args := []interface{}{Club_Stats.Club_ID, Club_Stats.Season, Club_Stats.Wins, Club_Stats.Losses, Club_Stats.Draws}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	err := c.DB.QueryRowContext(ctx, query, args...).Scan(&Club_Stats.Club_ID, &Club_Stats.Season, &Club_Stats.Average_Age, &Club_Stats.Squad_Size)
+	err := c.DB.QueryRowContext(ctx, query, args...).Scan(&Club_Stats.Club_ID, &Club_Stats.Season, &Club_Stats.Wins, &Club_Stats.Losses, &Club_Stats.Draws)
 	if err != nil {
 		return err
 	}
@@ -46,7 +47,7 @@ func (c ClubStatsModel) Update(Club_Stats *Club_Stats) error {
 		RETURNING Club_ID
 	`
 
-	args := []interface{}{Club_Stats.Club_ID, Club_Stats.Season, Club_Stats.Average_Age, Club_Stats.Squad_Size}
+	args := []interface{}{Club_Stats.Club_ID, Club_Stats.Season, Club_Stats.Wins, Club_Stats.Losses, Club_Stats.Draws}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	err := c.DB.QueryRowContext(ctx, query, args...).Scan(&Club_Stats.Club_ID)

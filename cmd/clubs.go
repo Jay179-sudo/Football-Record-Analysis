@@ -9,16 +9,52 @@ import (
 // From the Clubs csv extract Club_ID, Team Name and Stadium Capacity
 
 func getClubRecordTitles() []string {
-	record_title := []string{"club_id", "name", "stadium_seats"}
+	record_title := []string{"club_id", "name", "domestic_competition_id"}
+	return record_title
+}
+
+func getCompetitionTitles() []string {
+	record_title := []string{"type", "domestic_league_code", "country_name"}
 	return record_title
 }
 
 // ________________________STORES CLUB DATA INTO THE CLUB TABLE________________________
 func (app *application) GetClubData() error {
-	records := readCsvFile("./data/clubs.csv")
-
-	title_rows := getClubRecordTitles()
+	records := readCsvFile("./datasource/clubs.csv")
+	// store club data
+	title_rows := getCompetitionTitles()
+	competitionCountry := readCsvFile("./datasource/competitions.csv")
 	title_index := []int{}
+	mp1 := make(map[string]string)
+	for i, row := range competitionCountry {
+		var competition_id string
+		for j, element := range row {
+			if i == 0 {
+				if search(title_rows, element) {
+					title_index = append(title_index, j)
+				}
+			} else {
+				if j == title_index[0] {
+					// type
+					if element != "domestic_league" {
+						break
+					}
+
+				} else if j == title_index[1] {
+					// domestic_league_code
+					competition_id = element
+
+				} else if j == title_index[2] {
+					// country name
+
+					mp1[competition_id] = element
+
+				}
+			}
+		}
+	}
+	title_rows = getClubRecordTitles()
+	title_index = []int{}
 	for i, row := range records {
 		club_record := &data.Club{}
 		for j, element := range row {
@@ -44,12 +80,16 @@ func (app *application) GetClubData() error {
 					}
 
 				} else if j == title_index[2] {
-					// Store Stadium Seats
-					result, err := stoi64(element)
-					if err != nil {
-						return err
+					// Store Country from preprocessed map
+
+					// club_record.Country = mp1[element]
+					_, exists := mp1[element]
+					if !exists {
+						club_record.Country = "N/A"
+					} else {
+						club_record.Country = mp1[element]
+
 					}
-					club_record.Stadium_Capacity = result
 
 				}
 

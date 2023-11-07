@@ -12,7 +12,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const version = "1.0.0"
+const version = "2.0.0"
 
 type config struct {
 	db struct {
@@ -42,11 +42,24 @@ func main() {
 
 	logger.Printf("Database Connection Pool Established")
 	// First, call the excel handler to convert excel data into sql data.
-	app.GetClubData()
-	app.GetPlayerData()
+	ok := app.GetClubData()
+	if ok != nil {
+		logger.Fatal("Error Loading Club Data to Database")
+	}
+	ok = app.GetClubStatsData()
+	if ok != nil {
+		logger.Fatal("Error Loading Club Statistics to Database")
+	}
+	ok = app.GetPlayerData()
+	if ok != nil {
+		logger.Fatal("Error Loading Player Data to Database")
+	}
 	app.GetPlayerStatsData()
+	if ok != nil {
+		logger.Fatal("Error Loading Player Statistics to Database")
+	}
 
-	// Second, perform proprocessing on the data stored in the database
+	// Second, perform preprocessing on the data stored in the database
 	// 5 number summary for: minutes_played
 	// Precomputations
 

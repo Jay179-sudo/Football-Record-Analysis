@@ -11,9 +11,9 @@ type ClubModel struct {
 }
 
 type Club struct {
-	Club_ID          int64
-	Team_Name        string
-	Stadium_Capacity int64
+	Club_ID   int64
+	Team_Name string
+	Country   string
 }
 
 func (c ClubModel) Insert(club *Club) error {
@@ -21,14 +21,14 @@ func (c ClubModel) Insert(club *Club) error {
 		`
 		INSERT INTO Club
 		VALUES ($1, $2, $3)
-		RETURNING Club_ID, Team_Name, Stadium_Capacity
+		RETURNING Club_ID, Team_Name, Country
 	`
 
-	args := []interface{}{club.Club_ID, club.Team_Name, club.Stadium_Capacity}
+	args := []interface{}{club.Club_ID, club.Team_Name, club.Country}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	err := c.DB.QueryRowContext(ctx, query, args...).Scan(&club.Club_ID, &club.Team_Name, &club.Stadium_Capacity)
+	err := c.DB.QueryRowContext(ctx, query, args...).Scan(&club.Club_ID, &club.Team_Name, &club.Country)
 	if err != nil {
 		return err
 	}
@@ -39,14 +39,14 @@ func (c ClubModel) Update(club *Club) error {
 	query :=
 		`
 		UPDATE Club
-		SET Team_Name = $2, Stadium_Capacity = $3
+		SET Team_Name = $2, Country = $3
 		WHERE Club_ID = $1
 		RETURNING Club_ID
 	`
 
 	args := []interface{}{
 		club.Club_ID,
-		club.Stadium_Capacity,
+		club.Country,
 		club.Team_Name,
 	}
 
